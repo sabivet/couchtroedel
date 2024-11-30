@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Couchtrödel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        textarea, #photoUploader {
+            display: none; /* Versteckt, bis das Passwort eingegeben wurde */
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .photo-container {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+            width: 200px;
+        }
+        .photo-container img {
+            max-width: 100%;
+        }
+        .photo-container input[type="text"] {
+            margin-top: 5px;
+            padding: 5px;
+            width: 90%;
+        }
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .icon-button img {
+            width: 24px;
+            height: 24px;
+        }
+        .reserved-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Couchtrödel</h1>
+    <p id="freeTextContainer">Tragen Sie hier Ihren Text ein:</p>
+    <textarea id="freeText" rows="4" style="width: 100%;" placeholder="Schreiben Sie hier Ihren Text..."></textarea>
+    <br><br>
+    <input type="file" id="photoUploader" accept="image/*" multiple>
+    <button id="uploadButton" style="display: none;">Foto hochladen</button>
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        const photoUploader = document.getElementById('photoUploader');
+        const gallery = document.getElementById('gallery');
+        const freeTextContainer = document.getElementById('freeTextContainer');
+        const freeText = document.getElementById('freeText');
+        const uploadButton = document.getElementById('uploadButton');
+        const adminPassword = "sabivet"; // Passwort für Admin-Zugriff
+        let photoCount = 0;
+
+        // Passwort-Abfrage
+        const password = prompt("Bitte geben Sie das Passwort ein, um die Seite zu bearbeiten:");
+        if (password === adminPassword) {
+            freeText.style.display = "block";
+            photoUploader.style.display = "block";
+            uploadButton.style.display = "block";
+            freeTextContainer.innerHTML = "";
+            freeTextContainer.appendChild(freeText);
+        }
+
+        // Texteingabe speichern
+        freeText.addEventListener("input", () => {
+            freeTextContainer.textContent = freeText.value;
+        });
+
+        // Fotos hochladen
+        photoUploader.addEventListener('change', (event) => {
+            const files = event.target.files;
+
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) continue; // Nur Bilder verarbeiten
+
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    photoCount++;
+                    const photoContainer = document.createElement('div');
+                    photoContainer.className = 'photo-container';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result; // Lokale Bilddaten verwenden
+                    img.alt = `Hochgeladenes Bild ${photoCount}`;
+
+                    const reservedBanner = document.createElement('div');
+                    reservedBanner.className = 'reserved-banner';
+                    reservedBanner.textContent = 'Reserviert';
+
+                    const captionInput = document.createElement('input');
+                    captionInput.type = 'text';
+                    captionInput.placeholder = `Beschriftung für Foto ${photoCount}`;
+
+                    const emailButton = document.createElement('button');
+                    emailButton.className = 'icon-button';
+                    emailButton.innerHTML = '<img src="https://img.icons8.com/material-outlined/24/000000/new-post.png" alt="Email">';
+                    emailButton.onclick = () => {
+                        reservedBanner.style.display = 'block';
+                        window.location.href = `mailto:sabine@filios.de?subject=Reservierung für Foto ${photoCount}`;
+                    };
+
+                    const whatsappButton = document.createElement('button');
+                    whatsappButton.className = 'icon-button';
+                    whatsappButton.innerHTML = '<img src="https://img.icons8.com/material-outlined/24/000000/whatsapp--v1.png" alt="WhatsApp">';
+                    whatsappButton.onclick = () => {
+                        reservedBanner.style.display = 'block';
+                        window.open(`https://wa.me/491732027055?text=Ich möchte Foto ${photoCount} reservieren!`, '_blank');
+                    };
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'icon-button';
+                    deleteButton.innerHTML = '<img src="https://img.icons8.com/material-outlined/24/000000/trash.png" alt="Löschen">';
+                    deleteButton.onclick = () => {
+                        if (confirm('Möchten Sie dieses Foto wirklich löschen?')) {
+                            photoContainer.remove();
+                        }
+                    };
+
+                    photoContainer.appendChild(reservedBanner);
+                    photoContainer.appendChild(img);
+                    photoContainer.appendChild(captionInput);
+                    photoContainer.appendChild(emailButton);
+                    photoContainer.appendChild(whatsappButton);
+                    photoContainer.appendChild(deleteButton);
+
+                    gallery.appendChild(photoContainer);
+                };
+
+                reader.readAsDataURL(file); // Base64-Daten des Bildes laden
+            }
+        });
+    </script>
+</body>
+</html>
